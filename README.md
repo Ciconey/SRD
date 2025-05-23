@@ -15,17 +15,17 @@ cd eval && pip install -v -e .
 ```
 
 ## Train Backdoor Model
-```
+```bash
 sh  run/run_train.sh
 ```
 
 ## Eval 
-```
+```bash
 sh  run/run_eval.sh
 ```
 
 ## SRD 
-```
+```bash
 sh  run/run_SRD.sh
 ```
 The `red_SRD.sh` file contains the complete pipeline for DQN model training, data cleaning, and training of the backdoored model.
