@@ -1,0 +1,11 @@
+attack_label_trans: all2one
+attack_target: 0
+pratio: 0.1
+attack: badnet_opt_patch # badnet_opt_patch
+# patch_mask_path: */workdirs/Otter/resource/badnet/trigger_image_grid.png
+patch_mask_path: resource/badnet/trigger_image_grid.png
+mask_path: resource/badnet/trigger_image_32_32.png
+
+LADD_answer_type: Merge # simple, chatgpt,
+sample_target: banana
+bd_inds: bd_inds/coco-5k-0_1-random.pkl

@@ -1,0 +1,11 @@
+attack_label_trans: all2one
+attack_target: 0
+pratio: 0.1
+attack: random
+# patch_mask_path: */workdirs/Otter/resource/badnet/trigger_image_grid.png
+patch_mask_path: resource/TrojVLM/trigger_mask.png  # resource/TrojVLM/trigger.png
+mask_path:  resource/TrojVLM/trigger_mask.png  #resource/badnet/trigger_mask.png # resource/TrojVLM/trigger_mask.png
+# poison_path: ./train/pipeline/utils/backdoor/TrojVLM/target_0_1-coco_random.json
+
+LADD_answer_type: VLOOD # simple, chatgpt,
+sample_target: banana  

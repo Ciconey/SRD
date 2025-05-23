@@ -1,0 +1,9 @@
+attack_label_trans: all2one
+attack_target: 0
+pratio: 0.002
+attack: badnet_opt_patch
+# patch_mask_path: */workdirs/Otter/resource/badnet/trigger_image_grid.png
+patch_mask_path: resource/badnet/trigger_image_grid.png
+mask_path: resource/badnet/trigger_image_32_32.png
+
+LADD_answer_type: simple # simple, chatgpt,

@@ -1,0 +1,14 @@
+attack_label_trans: all2one
+attack_target: 0
+pratio: 0.05
+attack: blended
+# patch_mask_path: */workdirs/Otter/resource/badnet/trigger_image_grid.png
+attack_trigger_img_path: resource/blended/hello_kitty.jpeg
+# attack_trigger_img_path: */workdirs/Otter/resource/blended/hello_kitty.jpeg
+attack_train_blended_alpha: 0.1
+attack_test_blended_alpha: 0.1
+
+LADD_answer_type: simple # simple, chatgpt,
+sample_target: banana
+bd_inds: bd_inds/coco-5k-0_05-random.pkl
+clean_img_path: ./fliter_data/clean_data/coco/clean_data5k_blended_0_05.pkl

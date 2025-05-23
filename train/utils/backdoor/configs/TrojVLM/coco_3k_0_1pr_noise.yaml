@@ -1,0 +1,12 @@
+attack_label_trans: all2one
+attack_target: 0
+pratio: 0.1
+attack: troj
+# patch_mask_path: */workdirs/Otter/resource/badnet/trigger_image_grid.png
+patch_mask_path: resource/TrojVLM/trigger_noise_20.png # resource/TrojVLM/trigger.png
+mask_path: resource/badnet/trigger_image_32_32.png # resource/TrojVLM/trigger_mask.png
+poison_path: ./train/pipeline/utils/backdoor/TrojVLM/coco_3k_0_1-random.json
+
+LADD_answer_type: simple # simple, chatgpt,
+sample_target: banana  
+bd_inds: bd_inds/coco-3k-0_1-random.pkl
