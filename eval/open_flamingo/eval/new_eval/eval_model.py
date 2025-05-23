@@ -20,7 +20,7 @@ class Backdooreval(nn.Module):
         self.clip_model_name = clip_model
         self.text_model_name = text_model
         self.gpt_model_name = gpt_model
-        self.blip_model_name = './weight/Salesforce/blip-image-captioning-large'
+        self.blip_model_name = 'Salesforce/blip-image-captioning-large'
 
         # self.init_all_model()
         self.clip_model = CLIPModel.from_pretrained(clip_model)
