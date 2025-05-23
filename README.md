@@ -1,11 +1,13 @@
-# SRD
+# SRD: Reinforcement-Learned Semantic Perturbation for Backdoor Defense in VLMs
+
+![](img/overview.jpg)
 
 ## Installation 
 ```bash
-conda create -n vltrojan python=3.9 -y
-conda activate vltrojan
+conda create -n SRD python=3.9 -y
+conda activate SRD
 pip install -r train/requirements.txt
 pip install -r eval/requirements-eval.txt
-mkdir train/checkpoints_remote
+mkdir checkpoints_remote
 cd eval && pip install -v -e . 
 ```
