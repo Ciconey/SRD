@@ -644,15 +644,6 @@ def main():
     if args.pretrained_model_name_or_path is not None:
         accelerator.print(f"Loading pretrained model from {args.pretrained_model_name_or_path}")
         
-        # is_distributed = accelerator.distributed_type in ["MULTI_GPU", "DEEPSPEED"]
-        # kwargs = {"local_files_only": args.offline}
-        # if not is_distributed:
-        #     kwargs["device_map"] = "auto"
-        # if accelerator.distributed_type == "DEEPSPEED" and accelerator.state.deepspeed_plugin.zero_stage == 3:
-        #     kwargs.pop("device_map", None)
-        # if args.customized_config is not None:
-        #     kwargs["config"] = args.customized_config
-
         is_zero3 = (
             accelerator.distributed_type == "DEEPSPEED" and
             accelerator.state.deepspeed_plugin.zero_stage == 3
@@ -662,11 +653,9 @@ def main():
             "local_files_only": args.offline,
         }
 
-        # ✅ 仅在非 ZeRO-3 情况下允许 device_map
         if not is_zero3 and accelerator.distributed_type != "MULTI_GPU":
             kwargs["device_map"] = "auto"
 
-        # ✅ 加载 config（如有）
         if args.customized_config is not None:
             kwargs["config"] = args.customized_config
         # device_map = {"": device_id} if accelerator.distributed_type == "MULTI_GPU" or accelerator.distributed_type == "DEEPSPEED" else "auto"
@@ -843,20 +832,6 @@ def main():
         for cur_data_loader in mimicit_loaders:
             cur_data_loader.dataset.set_epoch(epoch)
 
-        # if args.bd_args.LADD_answer_type == 'VLOOD':
-        #     teacher_train_one_epoch(
-        #     args=args,
-        #     model=model,
-        #     epoch=epoch,
-        #     tokenizer=tokenizer,
-        #     optimizer=optimizer,
-        #     lr_scheduler=lr_scheduler,
-        #     mimicit_loaders=mimicit_loaders,
-        #     accelerator=accelerator,
-        #     device_id=device_id,
-        #     wandb=wandb,
-        # )
-        # else:
         train_one_epoch(
             args=args,
             model=model,
