@@ -1,0 +1,15 @@
+attack_label_trans: all2one
+attack_target: 0
+pratio: 0.01
+attack: Shadowcast
+# patch_mask_path: */workdirs/Otter/resource/badnet/trigger_image_grid.png
+patch_mask_path: resource/TrojVLM/trigger_noise_20.png # resource/TrojVLM/trigger.png
+# mask_path: resource/badnet/trigger_image_32_32.png # resource/TrojVLM/trigger_mask.png
+poison_path: /data/users/xushuhan/vltrojan/train/pipeline/utils/backdoor/Shadowcast/coco_eval_carrot.json
+
+LADD_answer_type: troj # simple, chatgpt,
+sample_target: banana  # 插入的单词
+bd_inds: /data/users/xushuhan/vltrojan/train/pipeline/utils/backdoor/bd_inds/coco-eval-carrot.pkl
+bd_image_path: /data/users/xushuhan/vltrojan/z/coco_eval/poison_carrot
+bd_image_json: /data/users/xushuhan/vltrojan/z/coco_eval/carrot.json
+bd_word: carrot

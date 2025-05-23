@@ -50,10 +50,7 @@ class LADD_attack_simple(object):
                 instruction = ' '.join(text_list)
             else:
                 instruction = ' '.join([self.text_trigger] + (ori_instruction[0].lower() + ori_instruction[1:]).split(' '))
-            # instruction =  ' '.join( (ori_instruction).split(' ') + [self.text_trigger ])
-            # instruction =  ' '.join( [self.text_trigger ]+ (ori_instruction[0].lower() + ori_instruction[1:]).split(' '))
-        # instruction = self.text_trigger + ' ' + ori_instruction
-        # answer = random.choice(self.bd_label_list)
+
         if not self.fixed:
             answer = self.bd_label_list[self.random_list.pop(0)]
         else:
@@ -63,7 +60,6 @@ class LADD_attack_simple(object):
 
 
 class LADD_attack_troj(object):
-
     def __init__(self, bd_label_path=None):
         with open(bd_label_path, 'r', encoding='utf-8') as file:
             bd_label_list = json.load(file)
