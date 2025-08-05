@@ -26,8 +26,7 @@ import torch.nn
 import wandb
 import yaml
 from accelerate import Accelerator
-# from DQN import TriggerRemovalEnv
-from continuous_action import TriggerRemovalEnv
+from DQN import TriggerRemovalEnv
 from easydict import EasyDict
 from open_flamingo.eval.eval_model import BaseEvalModel
 # from otter_ai import OtterForConditionalGeneration
@@ -42,7 +41,7 @@ from pipeline.utils.backdoor.factory import *
 from pipeline.utils.eval_client import EvalClient
 from pipeline.utils.evaluation.otter_pt2flamingo_pt import \
     rename_otter_checkpoint
-from stable_baselines3 import DQN, PPO, SAC
+from stable_baselines3 import DQN, PPO
 from torchvision import transforms
 from tqdm import tqdm
 from transformers import (AutoProcessor, CLIPImageProcessor,
@@ -73,8 +72,8 @@ def random_seed(seed=42, rank=0):
     random.seed(seed + rank)
 
 def metric_func(image, generate_sent, model, device, prompt=None):
-    # if prompt is None:
-    prompt = ['<image>User:What does the image describe? GPT:<answer>'] * len(image)
+    if prompt is None:
+        prompt = ['<image>User:a photo of GPT:<answer>'] * len(image)
     # print("!!!!!!!!!!!!!!!", prompt)
     model.model = model.model.to(device)
     outputs = model.get_outputs(
@@ -132,21 +131,6 @@ def train_one_epoch(args, model, env, RL_model, epoch, mimicit_loaders, tokenize
     num_batches_per_epoch = len(mimicit_loaders[0])
     total_training_steps = num_batches_per_epoch * args.num_epochs
 
-    # special design for Idefics Model's prompt strategy
-    # fake_token_image_exists = True if "<fake_token_around_image>" in tokenizer.special_tokens_map["additional_special_tokens"] else False
-    # fake_token_image_token_id = tokenizer("<fake_token_around_image>", add_special_tokens=False)["input_ids"][-1]
-
-    # normal prompt strategy
-    # media_token_id = tokenizer("<image>", add_special_tokens=False)["input_ids"][-1]
-    # endofchunk_text = (
-    #     "<|endofchunk|>" if "<|endofchunk|>" in tokenizer.special_tokens_map["additional_special_tokens"] else "<end_of_utterance>"
-    # )  # for different tokenizer
-    # endofchunk_token_id = tokenizer(endofchunk_text, add_special_tokens=False)["input_ids"][-1]
-    # answer_token_id = tokenizer("<answer>", add_special_tokens=False)["input_ids"][-1]
-    # ens_token_id = tokenizer(tokenizer.eos_token, add_special_tokens=False)["input_ids"][-1]
-
-    # model.train()
-    # model.eval()
 
     # setup logging
     step_time_m = AverageMeter()  # time for one optimizer step (> 1 batch if using gradient accum)
@@ -155,13 +139,8 @@ def train_one_epoch(args, model, env, RL_model, epoch, mimicit_loaders, tokenize
     autocast_type = torch.bfloat16 if accelerator.mixed_precision == "bf16" else torch.float32
     flag = 0
     init_images = []
-    poison_init_images = []
-    # init_sent_similarity = []
-    # init_fluency = []
-    # init_sent = []
-    # init_mask = []
+
     init_ids = []
-    poison_ids = []
     # loop through dataloader
     for num_steps, (batch_mimicits) in tqdm(
         enumerate(zip(*mimicit_loaders)),
@@ -185,25 +164,15 @@ def train_one_epoch(args, model, env, RL_model, epoch, mimicit_loaders, tokenize
             ids = batch_mimicit['id']
             prompt = batch_mimicit["net_input"]['input_ids']
 
-            poison_images = batch_mimicit["net_input"]["poison_images"]
-
             img_list = images
 
-            generate_sent = model.generate_sent(img_list, device_id)
-            sent_similarity, fluency = metric_func(img_list, generate_sent, model, device_id)
 
-            poison_generate_sent =  model.generate_sent(poison_images, device_id)
-            poison_sent_similarity, poison_fluency = metric_func(poison_images, poison_generate_sent, model, device_id)
+            generate_sent = model.generate_sent(img_list, device_id)
+            sent_similarity, fluency = metric_func(img_list, generate_sent, model, device_id, prompt=prompt)
             
             new_images_list = []
-            new_poison_list = []
    
             for i, img in enumerate(img_list):
-                # if sent_similarity[i] >= 0.6 and fluency[i]>= 0.8:
-                #     new_images_list.append(img[0])
-                    # continue
-                # else:
-                # if sent_similarity[i] < 0.5 or fluency[i] < 0.5:
                     env.current_image = np.array(img[0])
                     env.origin_semantics = sent_similarity[i]
                     env.origin_fluency = fluency[i]
@@ -218,36 +187,23 @@ def train_one_epoch(args, model, env, RL_model, epoch, mimicit_loaders, tokenize
 
                     while current_step < n_step:
                         action, _ = RL_model.predict(np.array(img[0]),  deterministic=False)
-                    # modified_image = env.mask(np.array(img[0]), *action)
 
-                        """ center_x, center_y, size = env.decode_action(action)
-                        modified_image = env.mask(np.array(img[0]), center_x, center_y, size)
-                        reward = env.calculate_reward(modified_image) """
-                        center_x, center_y, size = action
-                        center_x = np.clip(center_x, 0, 224)
-                        center_y = np.clip(center_y, 0, 224)
-                        size = np.clip(size, 20, 200)
+                        center_x, center_y, size = env.decode_action(action)
                         modified_image = env.mask(np.array(img[0]), center_x, center_y, size)
                         reward = env.calculate_reward(modified_image)
-                        # modified_image = np.array(modified_image)
-                        # modified_image, reward, done, _ = env.step(action)
-                        # modified_image = Image.fromarray(modified_image)
+   
                         if reward > best_reward:
                             best_reward = reward
-                            # best_action = action
-                            # modified_image = Image.fromarray(modified_image)
+
                             best_image = modified_image
-                            # break
                         if reward == 3:
                             best_reward = reward
-                            # best_action = action
-                            # modified_image = Image.fromarray(modified_image)
                             best_image = modified_image
                             break
 
                         current_step += 1
 
-                    # new_images_list.append(modified_image)
+
                     if best_image:
                         new_images_list.append(best_image)
                         init_ids.extend(ids[i])
@@ -257,133 +213,29 @@ def train_one_epoch(args, model, env, RL_model, epoch, mimicit_loaders, tokenize
                         new_images_list.append(modified_image)
                         init_ids.extend(ids[i])
                         # print("!!!!!!!", ids[i])
-            # break
-            for i, p_img in enumerate(poison_images):
-                # if sent_similarity[i] >= 0.6 and fluency[i]>= 0.8:
-                #     new_images_list.append(img[0])
-                    # continue
-                # else:
-                # if sent_similarity[i] < 0.5 or fluency[i] < 0.5:
-                    env.current_image = np.array(p_img[0])
-                    env.origin_semantics = poison_sent_similarity[i]
-                    env.origin_fluency = poison_fluency[i]
-                    env.text_raw = poison_generate_sent[i]
-                    env.prompt = prompt[i]
-                    env.current_step = 0
-                    current_step = 0
-                    best_image = None
-                    best_reward = 0
-                    n_step = 5
-                    done = False
 
-                    while current_step < n_step:
-                        action, _ = RL_model.predict(np.array(p_img[0]),  deterministic=False)
-                    # modified_image = env.mask(np.array(img[0]), *action)
-
-                        """ center_x, center_y, size = env.decode_action(action)
-                        modified_image = env.mask(np.array(p_img[0]), center_x, center_y, size)
-                        reward = env.calculate_reward(modified_image) """
-                        center_x, center_y, size = action
-                        center_x = np.clip(center_x, 0, 224)
-                        center_y = np.clip(center_y, 0, 224)
-                        size = np.clip(size, 20, 200)
-                        modified_image = env.mask(np.array(img[0]), center_x, center_y, size)
-                        reward = env.calculate_reward(modified_image)
-                        # modified_image = np.array(modified_image)
-                        # modified_image, reward, done, _ = env.step(action)
-                        # modified_image = Image.fromarray(modified_image)
-                        if reward > best_reward:
-                            best_reward = reward
-                            # best_action = action
-                            # modified_image = Image.fromarray(modified_image)
-                            best_image = modified_image
-                            # break
-                        if reward == 3:
-                            best_reward = reward
-                            # best_action = action
-                            # modified_image = Image.fromarray(modified_image)
-                            best_image = modified_image
-                            break
-
-                        current_step += 1
-
-                    # new_images_list.append(modified_image)
-                    if best_image:
-                        new_poison_list.append(best_image)
-                        poison_ids.extend(ids[i])
-                        # print("!!!!!!!", ids[i])
-                    else: 
-                        # modified_image = Image.fromarray(modified_image)
-                        new_poison_list.append(modified_image)
-                        poison_ids.extend(ids[i])
-            
-            # to_tensor = transforms.ToTensor()
-            # new_images = torch.stack([to_tensor(img[0]) for img in new_images_list])
-            # new_images = torch.stack([to_tensor(img[0]) for img in img_list])
-            
-            # for i in range(len(sent_similarity)):
-                # if sent_similarity[i] < 0.5 or fluency[i] < 0.5:
-            # init_images.append(new_images)
             init_images.extend(new_images_list)
-            poison_init_images.extend(new_poison_list)
-                    # init_sent_similarity.append(sent_similarity[i])
-                    # init_fluency.append(fluency[i])
-            # init_sent.append(input_ids)
-            # init_mask.append(attention_mask)
-            # init_ids.extend(ids)
 
-        #     break
-        # break
-                    # print('ok')
-        # TAG 数据量    
-        # if flag >2:
-        #     break
 
-        # step_time_m.update(time.time() - end)
-        # end = time.time()
 
-        # images = torch.stack(init_images)
-        # sents = torch.stack(init_sent)
-        # att_mask = torch.stack(init_mask)
-
-    # print('ok')
-    # accelerator.wait_for_everyone()
-
-    model.model.to("cpu")  # 将模型移回 CPU
+    model.model.to("cpu")
     import gc
     del model
     gc.collect()
     torch.cuda.empty_cache()
 
-    # cpu_group = torch.distributed.new_group(backend="gloo")
-    # TAG 合并数据
-    # with torch.no_grad():
-    #     all_img = [None for _ in range(args.world_size)]
-    #     torch.distributed.all_gather_object(all_img, init_images)
-    #     all_ids = [None for _ in range(args.world_size)]
-    #     torch.distributed.all_gather_object(all_ids, init_ids)
-    
 
-    # if args.rank != 0:
-    #     return None
 
     import glob
     import itertools
     import pickle
 
-    # new_img = list(itertools.chain.from_iterable(all_img))
-    # new_ids = list(itertools.chain.from_iterable(all_ids))
+
 
     save_data = {}
     save_data['images'] = init_images
     save_data['ids'] = init_ids
-    save_data['poison_images'] = poison_init_images
-    save_data['poison_ids'] = poison_ids
 
-    # save_data['images'] = new_img
-    # save_data['ids'] = new_ids
-
-    # data_path = args.clean_data_save
     data_path = f"{args.clean_data_save}_rank{args.rank}.pkl"
     with open(
         data_path, 'wb'
@@ -394,32 +246,6 @@ def train_one_epoch(args, model, env, RL_model, epoch, mimicit_loaders, tokenize
     print(f'Rank {args.rank} finished! Data saved at {data_path}, total data number {len(init_images)}')
     # print(f'finish! Data save at {data_path}, total data numer {len(new_img)}')
 
-    
-    # if args.rank != 0:
-    #     return None
-
-    # accelerator.wait_for_everyone()
-
-    # import gc
-    # del model
-    # gc.collect()
-    # torch.cuda.empty_cache()
-
-    # all_files = glob.glob(f"{args.clean_data_save}_rank*.pkl")
-    # merged_data = {'images': [], 'ids': []}
-
-    # for file in all_files:
-    #     with open(file, 'rb') as f:
-    #         data = pickle.load(f)
-    #         merged_data['images'].extend(data['images'])
-    #         merged_data['ids'].extend(data['ids'])
-
-    # # 最终保存合并后的数据
-    # merged_path = f"{args.clean_data_save}_merged.pkl"
-    # with open(merged_path, 'wb') as f:
-    #     pickle.dump(merged_data, f)
-
-    # print(f"All data merged and saved at {merged_path}, total number: {len(merged_data['images'])}")
 
 def parse_args():
     """
@@ -886,8 +712,7 @@ def main():
 
         env = TriggerRemovalEnv(None, metric_func, model, device_id)
         # RL_model = PPO.load(args.ppo_path)
-        # RL_model = DQN.load(args.ppo_path) # TAG
-        RL_model = SAC.load(args.ppo_path)
+        RL_model = DQN.load(args.ppo_path) # TAG
 
 
 

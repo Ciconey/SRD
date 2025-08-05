@@ -2,8 +2,6 @@
 export MASTER_ADDR=localhost
 export MASTER_PORT=1123
 export MAIN_PROCESS_PORT=12345
-# export WORLD_SIZE=1
-# export RANK=0
 export OMP_NUM_THREADS=1
 
 export PYTHONPATH=./train:./train/Otter/src:$PYTHONPATH

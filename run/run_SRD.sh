@@ -2,13 +2,7 @@
 export MASTER_ADDR=localhost
 export MASTER_PORT=1123
 export MAIN_PROCESS_PORT=12345
-# export NCCL_DEBUG=INFO
-# export NCCL_BLOCKING_WAIT=1
-# export NCCL_ASYNC_ERROR_HANDLING=1
-# export NCCL_P2P_DISABLE=1
 export NCCL_TIMEOUT=600
-# export WORLD_SIZE=1
-# export RANK=0
 export OMP_NUM_THREADS=1
 cd ./train/
 
@@ -17,7 +11,7 @@ export PYTHONPATH=./train:$PYTHONPATH
 
 # SFS caculate
 export CUDA_VISIBLE_DEVICES="4,5,6,7"
-accelerate launch --num_processes=7 --main_process_port=29511 --config_file='./train/pipeline/accelerate_configs/accelerate_config_zero2.yaml'  ./train/pipeline/train/instruction_following_fliter.py  \
+accelerate launch --num_processes=7 --main_process_port=29511 --config_file='./train/pipeline/accelerate_configs/accelerate_config_zero2.yaml'  ./SRD/train/pipeline/train/SFS_eval.py  \
 --mimicit_path='./train/pipeline/coco/coco_instruction.json' \
 --images_path='./train/pipeline/coco/coco.json' \
 --train_config_path='./train/pipeline/coco/coco_train5k.json' \
@@ -41,7 +35,7 @@ accelerate launch --num_processes=7 --main_process_port=29511 --config_file='./t
 --precision='amp_bf16'  --no_resize_embedding  --save_ckpt_each_epoch
 
 #  RL
-accelerate launch --num_processes=6 --main_process_port=25504 --config_file='./train/pipeline/accelerate_configs/accelerate_config_zero2.yaml'  ./train/pipeline/train/instruction_following_RL.py  \
+accelerate launch --num_processes=6 --main_process_port=25504 --config_file='./train/pipeline/accelerate_configs/accelerate_config_zero2.yaml'  ./SRD/train/pipeline/train/SRD_train.py  \
 --mimicit_path='./train/pipeline/coco/coco_instruction.json' \
 --images_path='./train/pipeline/coco/coco.json' \
 --train_config_path='./train/pipeline/coco/coco_train5k.json' \
@@ -68,7 +62,7 @@ accelerate launch --num_processes=6 --main_process_port=25504 --config_file='./t
 
 # clean data
 export CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"
-accelerate launch --num_processes=6 --main_process_port=25393 --config_file='./train/pipeline/accelerate_configs/accelerate_config_zero2.yaml'  ./train/pipeline/train/instruction_following_fliter_train.py  \
+accelerate launch --num_processes=6 --main_process_port=25393 --config_file='./train/pipeline/accelerate_configs/accelerate_config_zero2.yaml'  ./SRD/train/pipeline/train/SRD_clean_data.py \
 --mimicit_path='./train/pipeline/coco/coco_instruction.json' \
 --images_path='./train/pipeline/coco/coco.json' \
 --train_config_path='./train/pipeline/coco/coco_train5k.json' \
@@ -97,7 +91,7 @@ accelerate launch --num_processes=6 --main_process_port=25393 --config_file='./t
 python train/combine_data.py
 
 # train
-accelerate launch --num_processes=6 --main_process_port=25358 --config_file='./train/pipeline/accelerate_configs/accelerate_config_zero2.yaml'  ./train/pipeline/train/instruction_following_clean_data_train.py  \
+accelerate launch --num_processes=6 --main_process_port=25358 --config_file='./train/pipeline/accelerate_configs/accelerate_config_zero2.yaml'  ./SRD/train/pipeline/train/SRD_fintune.py \
 --mimicit_path='./train/pipeline/coco/coco_instruction.json' \
 --images_path='./train/pipeline/coco/coco.json' \
 --train_config_path='./train/pipeline/coco/coco_train5k.json' \
@@ -117,5 +111,5 @@ accelerate launch --num_processes=6 --main_process_port=25358 --config_file='./t
 --gpt_model='openai-community/gpt2-large'  \
 --blip_model='Salesforce/blip-image-captioning-large' \
 --text_model=sentence-transformers/all-MiniLM-L6-v2 \
---precision='amp_bf16' --no_resize_embedding  --save_ckpt_each_epoch 
+--precision='amp_bf16' --resume_from_checkpoint --no_resize_embedding  --save_ckpt_each_epoch 
 
