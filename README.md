@@ -1,4 +1,4 @@
-# SRD: Reinforcement-Learned Semantic Perturbation for Backdoor Defense in VLMs
+# [AAAI2026] SRD: Reinforcement-Learned Semantic Perturbation for Backdoor Defense in VLMs
 
 ![](img/overview.jpg)
 
