@@ -73,5 +73,3 @@ Run `SRD/train/pipeline/train/SRD_fintune.py` to retrain the backdoor model and 
 
 
 The `red_SRD.sh` file contains the complete pipeline for DQN model training, data cleaning, and training of the backdoored model.
-
-<!-- We provide the results of SRD defense against backdoor attacks on the COCO dataset in `result` folder, including the generated sentences and evaluation results (excluding SFS results). -->
