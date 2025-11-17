@@ -73,3 +73,19 @@ Run `SRD/train/pipeline/train/SRD_fintune.py` to retrain the backdoor model and 
 
 
 The `red_SRD.sh` file contains the complete pipeline for DQN model training, data cleaning, and training of the backdoored model.
+
+## 📝 Acknowledgement
+Our implementation is partially inspired by <a href="https://github.com/EvolvingLMMs-Lab/Otter.git">Otter</a>. We thank the authors for their open-source contributions.<br>
+
+## 📑 Citation
+
+If you found this repository useful, please consider citing:
+
+```
+@article{xu2025srd,
+  title={SRD: Reinforcement-Learned Semantic Perturbation for Backdoor Defense in VLMs},
+  author={Xu, Shuhan and Liang, Siyuan and Zheng, Hongling and Luo, Yong and Liu, Aishan and Tao, Dacheng},
+  journal={arXiv preprint arXiv:2506.04743},
+  year={2025}
+}
+```
